@@ -30,7 +30,7 @@ def from_array_to_wav(sound_array, fs, name):
 
 if __name__ == '__main__':
     # load trained model and sinus data
-    model = torch.load('saved_models/raw_audio_encoder_1D')
+    model = torch.load('models/raw_audio_encoder_1D')
     model.eval()
     output = generate_data(model)
     from_array_to_wav(sound_array=output, fs= 11000, name='test1')

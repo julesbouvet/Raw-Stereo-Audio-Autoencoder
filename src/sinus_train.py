@@ -151,10 +151,10 @@ def run(model,VAE,train,save=False, savename='X', load=False, loadname='X'):
         trained_model = training(train_loader, model, VAE=VAE, lr=0.001, epochs=15)
 
     if save==True:
-        torch.save(trained_model, 'saved_models/'+savename)
+        torch.save(trained_model, 'models/'+savename)
 
     if load==True:
-        model = torch.load('saved_models/'+loadname)
+        model = torch.load('models/'+loadname)
         model.eval()
 
     print('ok3 \n \n \n')

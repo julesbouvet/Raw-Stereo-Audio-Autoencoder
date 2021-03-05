@@ -4,7 +4,7 @@ from sinus_train import test_prediction
 import matplotlib.pyplot as plt
 
 # load trained model and sinus data
-model = torch.load('saved_models/save_trained_model')
+model = torch.load('models/save_trained_model')
 model.eval()
 
 # sinus_data = np.load('samples/sinus_samples.npz')['x']

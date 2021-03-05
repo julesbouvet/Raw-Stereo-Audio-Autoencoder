@@ -145,10 +145,10 @@ def run(model, data_type, data_parameter, batch_size, train, save, savename, loa
         trained_model = training(train_loader, model, lr=0.001, epochs=50)
 
     if save==True:
-        torch.save(trained_model, 'saved_models/'+savename)
+        torch.save(trained_model, 'models/'+savename)
 
     if load==True:
-        model = torch.load('saved_models/'+loadname)
+        model = torch.load('models/'+loadname)
         model.eval()
 
     test_prediction(samples, model)

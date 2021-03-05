@@ -3,3 +3,4 @@ torchsummary
 scipy
 torch
 numpy
+librosa

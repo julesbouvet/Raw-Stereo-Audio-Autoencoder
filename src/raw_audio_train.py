@@ -34,12 +34,14 @@ def sinus_data_generation(nb_examples, fs , freq_range, len_sample, batch_size):
     # dataset loading
     train_dataset = SinusSamplesDataset(nb_examples=nb_examples, fs=fs, frequency_range=freq_range, len_sinus=len_sample)
     samples = train_dataset.samples
+    print('Sinus train dataset done!')
 
     # train test split
     split = int(nb_examples * 0.3)
     # print('split', split)
-    test_dataset = SinusSamplesDataset(nb_examples=nb_examples*split, fs=fs, frequency_range=freq_range,
+    test_dataset = SinusSamplesDataset(nb_examples=split, fs=fs, frequency_range=freq_range,
                                         len_sinus=len_sample)
+    print('Sinus test dataset done!')
 
     # dataloader creation
     train_dataloader = DataLoader(train_dataset, batch_size)
@@ -48,7 +50,9 @@ def sinus_data_generation(nb_examples, fs , freq_range, len_sample, batch_size):
     return train_dataloader, test_dataloader, samples
 
 
-def training(dataloader, model, lr, epochs):
+def training(dataloader, testloader, model, lr, epochs):
+
+    print('Starting the training')
 
     # optimizer and loss
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -58,6 +62,7 @@ def training(dataloader, model, lr, epochs):
 
     for epoch in range(epochs):
         loss = 0
+        val_loss = 0
         for i, batch_features in enumerate(dataloader, 0):
 
             # reset the gradients back to zero
@@ -86,8 +91,19 @@ def training(dataloader, model, lr, epochs):
         # compute the epoch training loss
         loss = loss / len(dataloader)
 
+        # compute the validation loss
+        with torch.no_grad():
+            for i, test_features in enumerate(testloader, 0):
+                test_features = test_features.float()
+                outputs = model(test_features)
+                test_loss = criterion(outputs, test_features)
+                val_loss += test_loss.item()
+
+        # compute the epoch validation loss
+        val_loss = val_loss/len(testloader)
+
         # display the epoch training loss
-        print("epoch : {}/{}, loss = {:.6f}".format(epoch + 1, epochs, loss))
+        print("epoch : {}/{}, loss = {:.6f}, validation loss = {:.6f}".format(epoch + 1, epochs, loss, val_loss))
 
     print("Trained Model!")
 
@@ -143,7 +159,7 @@ def run(model, data_type, data_parameter, batch_size, train, save, savename, loa
                                                                    batch_size=batch_size)
 
     if train == True:
-        trained_model = training(train_loader, model, lr=0.001, epochs=50)
+        trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=50)
 
     if save==True:
         torch.save(trained_model, 'models/'+savename)
@@ -170,7 +186,7 @@ if __name__ == '__main__':
     if data_type == 'sinus':
         nb_examples = 1000
         fs = 11000
-        freq_range = [200, 4000]
+        freq_range = [200, 201]
         len_sample = 11000
         data_param = [nb_examples, fs, freq_range, len_sample]
 

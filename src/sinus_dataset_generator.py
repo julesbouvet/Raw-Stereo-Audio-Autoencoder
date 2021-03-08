@@ -18,7 +18,7 @@ class SinusSamplesDataset(Dataset):
         self.frequency_range = frequency_range
         self.len_sinus = len_sinus
         self.samples = self.sinus_generator(self.nb_examples, self.fs, self.frequency_range, self.len_sinus)
-        print('Sinus dataset done!')
+
 
     def __len__(self):
         return self.samples.size()[0]

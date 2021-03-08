@@ -32,17 +32,18 @@ def audio_data_generation(audio_wav, duration_sample, batch_size):
 def sinus_data_generation(nb_examples, fs , freq_range, len_sample, batch_size):
 
     # dataset loading
-    dataset = SinusSamplesDataset(nb_examples=nb_examples, fs=fs, frequency_range=freq_range, len_sinus=len_sample)
-    samples = dataset.samples
-    print(samples.shape)
+    train_dataset = SinusSamplesDataset(nb_examples=nb_examples, fs=fs, frequency_range=freq_range, len_sinus=len_sample)
+    samples = train_dataset.samples
 
     # train test split
-    # split = int(load_data.shape[0] * 0.7)
+    split = int(nb_examples * 0.3)
     # print('split', split)
+    test_dataset = SinusSamplesDataset(nb_examples=nb_examples*split, fs=fs, frequency_range=freq_range,
+                                        len_sinus=len_sample)
 
     # dataloader creation
-    train_dataloader = DataLoader(dataset, batch_size)
-    test_dataloader = DataLoader(dataset, batch_size)
+    train_dataloader = DataLoader(train_dataset, batch_size)
+    test_dataloader = DataLoader(test_dataset, batch_size)
 
     return train_dataloader, test_dataloader, samples
 
@@ -176,10 +177,10 @@ if __name__ == '__main__':
     train = True
 
     save = False
-    savename = 'raw_audio_encoder_1D'
+    savename = 'raw_audio_encoder_1D.pt'
 
     load = False
-    loadname = 'raw_audio_encoder_1D'
+    loadname = 'raw_audio_encoder_1D.pt'
 
     run(model, data_type=data_type, data_parameter=data_param, batch_size=16,
         train=train, save=save, savename=savename, load=load, loadname=loadname)

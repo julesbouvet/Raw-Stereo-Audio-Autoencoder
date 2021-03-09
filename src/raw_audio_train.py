@@ -54,6 +54,11 @@ def training(dataloader, testloader, model, lr, epochs):
 
     print('Starting the training')
 
+    # make list for the plot
+    loss_list = []
+    val_loss_list = []
+    epochs_list = []
+
     # optimizer and loss
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss()
@@ -102,8 +107,18 @@ def training(dataloader, testloader, model, lr, epochs):
         # compute the epoch validation loss
         val_loss = val_loss/len(testloader)
 
+        # update lists
+        loss_list.append(loss)
+        val_loss_list.append(val_loss)
+        epochs_list.append(epoch)
+
         # display the epoch training loss
         print("epoch : {}/{}, loss = {:.6f}, validation loss = {:.6f}".format(epoch + 1, epochs, loss, val_loss))
+
+    plt.plot(epochs_list, loss_list, label='loss')
+    plt.plot(epochs_list, val_loss_list, label='validation loss')
+    plt.legend()
+    plt.show()
 
     print("Trained Model!")
 
@@ -159,10 +174,11 @@ def run(model, data_type, data_parameter, batch_size, train, save, savename, loa
                                                                    batch_size=batch_size)
 
     if train == True:
-        trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=50)
+        trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=15)
 
     if save==True:
         torch.save(trained_model, 'models/'+savename)
+        print('Model saved!')
 
     if load==True:
         model = torch.load('models/'+loadname)
@@ -192,8 +208,8 @@ if __name__ == '__main__':
 
     train = True
 
-    save = False
-    savename = 'raw_audio_encoder_1D.pt'
+    save = True
+    savename = 'raw_audio_encoder_1D_for_sinus.pt'
 
     load = False
     loadname = 'raw_audio_encoder_1D.pt'

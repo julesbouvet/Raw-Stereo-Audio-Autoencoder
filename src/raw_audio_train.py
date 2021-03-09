@@ -130,17 +130,12 @@ def test_prediction(data, model):
     fig, ax = plt.subplots(3, 3)
     for ii in range(3):
         for jj in range(3):
-            print(data.shape)
             # data shape = (X, 2, 11000)
 
             data_sample = data[ii * 100 + jj + 50]  # (2, 11000)
-            print(ii * 3 + jj + 1)
-            print(data_sample.shape)
             data_sample = torch.unsqueeze(data_sample, dim=0)  # (1, 2, 11000)
-            print(data_sample.shape)
             model = model.float()
             prediction = model(data_sample.float())  # (1, 2, 11000)
-            print(prediction.shape)
 
             # remove 1st fim -> (2, 11000)
             prediction = torch.squeeze(prediction)
@@ -149,17 +144,16 @@ def test_prediction(data, model):
             # torch.Tensor -> numpy.array
             prediction = prediction.detach().numpy()
             data_sample = data_sample.numpy()
-            print(prediction.shape)
 
-            ax[ii, jj].plot(data_sample[0][:200], color="tab:blue")
-            ax[ii, jj].plot(prediction[0][:200], color="tab:red")
+            ax[ii, jj].plot(data_sample[1][:200], color="tab:blue")
+            ax[ii, jj].plot(prediction[1][:200], color="tab:red")
             ax[ii, jj].set_xticks([])
             ax[ii, jj].set_yticks([])
     plt.show()
     pass
 
 
-def run(model, data_type, data_parameter, batch_size, train, save, savename, load, loadname):
+def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, savename, load, loadname):
 
     if data_type == 'audio':
         train_loader, test_loader, samples = audio_data_generation(audio_wav=data_parameter[0],
@@ -174,14 +168,14 @@ def run(model, data_type, data_parameter, batch_size, train, save, savename, loa
                                                                    batch_size=batch_size)
 
     if train == True:
-        trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=15)
+        trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=nb_epochs)
 
     if save==True:
-        torch.save(trained_model, 'models/'+savename)
+        torch.save(trained_model, '../models/'+savename)
         print('Model saved!')
 
     if load==True:
-        model = torch.load('models/'+loadname)
+        model = torch.load('../models/'+loadname)
         model.eval()
 
     test_prediction(samples, model)
@@ -190,7 +184,10 @@ def run(model, data_type, data_parameter, batch_size, train, save, savename, loa
 
 if __name__ == '__main__':
 
-    model = AutoEncoder_1D()
+    kernel_size = 13
+    padding = int(kernel_size/2)
+    model = AutoEncoder_1D(kernel_size=kernel_size,
+                           padding=padding)
 
     data_type = 'sinus'
 
@@ -202,17 +199,20 @@ if __name__ == '__main__':
     if data_type == 'sinus':
         nb_examples = 1000
         fs = 11000
-        freq_range = [200, 201]
+        freq_range = [200, 1000]
         len_sample = 11000
         data_param = [nb_examples, fs, freq_range, len_sample]
 
+    batch_size = 16
+    nb_epochs = 10
+
     train = True
 
-    save = True
-    savename = 'raw_audio_encoder_1D_for_sinus.pt'
+    save = False
+    savename = 'raw_audio_encoder_1D_sinus_200_1000Hz.pt'
 
     load = False
-    loadname = 'raw_audio_encoder_1D.pt'
+    loadname = 'raw_audio_encoder_1D_sinus_200_1000Hz.pt'
 
-    run(model, data_type=data_type, data_parameter=data_param, batch_size=16,
+    run(model, data_type=data_type, data_parameter=data_param, batch_size=batch_size, nb_epochs=nb_epochs,
         train=train, save=save, savename=savename, load=load, loadname=loadname)

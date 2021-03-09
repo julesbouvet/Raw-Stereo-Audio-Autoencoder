@@ -13,7 +13,7 @@ from torchsummary import summary
 
 class AutoEncoder_1D(nn.Module):
 
-    def __init__(self, kernel_size=5, padding=2):
+    def __init__(self, kernel_size, padding):
         super(AutoEncoder_1D, self).__init__()
         # input size = (batch_size, 2, len_sample=11000)
 
@@ -149,6 +149,6 @@ class AutoEncoder_2D(nn.Module):
 
 
 if __name__ == "__main__":
-    net = AutoEncoder_1D()
+    net = AutoEncoder_1D(kernel_size=33, padding=16)
     summary(net, input_size=(2, 11000))
     print(net)

@@ -78,6 +78,7 @@ def training(dataloader, testloader, model, lr, epochs):
             # print(batch_features.shape)
             # batch_features = Variable(batch_features, requires_grad=True)
             batch_features = batch_features.float()
+            batch_features = batch_features.to(device)
 
             outputs = model(batch_features)
 
@@ -100,6 +101,7 @@ def training(dataloader, testloader, model, lr, epochs):
         with torch.no_grad():
             for i, test_features in enumerate(testloader, 0):
                 test_features = test_features.float()
+                test_features = test_features.to(device)
                 outputs = model(test_features)
                 test_loss = criterion(outputs, test_features)
                 val_loss += test_loss.item()
@@ -135,6 +137,7 @@ def test_prediction(data, model):
             data_sample = data[ii * 100 + jj + 50]  # (2, 11000)
             data_sample = torch.unsqueeze(data_sample, dim=0)  # (1, 2, 11000)
             model = model.float()
+            data_sample = data_sample.to(device)
             prediction = model(data_sample.float())  # (1, 2, 11000)
 
             # remove 1st fim -> (2, 11000)
@@ -142,7 +145,9 @@ def test_prediction(data, model):
             data_sample = torch.squeeze(data_sample)
 
             # torch.Tensor -> numpy.array
+            prediction = prediction.cpu()
             prediction = prediction.detach().numpy()
+            data_sample = data_sample.cpu()
             data_sample = data_sample.numpy()
 
             ax[ii, jj].plot(data_sample[1][:200], color="tab:blue")
@@ -171,7 +176,7 @@ def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, sa
         trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=nb_epochs)
 
     if save==True:
-        torch.save(trained_model, '../models/'+savename)
+        torch.save(trained_model, savename)
         print('Model saved!')
 
     if load==True:
@@ -184,10 +189,19 @@ def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, sa
 
 if __name__ == '__main__':
 
-    kernel_size = 13
+    # run on cpu or gpu
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")  # you can continue going on here, like cuda:1 cuda:2....etc.
+        print("Running on the GPU")
+    else:
+        device = torch.device("cpu")
+        print("Running on the CPU")
+
+    kernel_size = 5
     padding = int(kernel_size/2)
     model = AutoEncoder_1D(kernel_size=kernel_size,
                            padding=padding)
+    model = model.to(device)
 
     data_type = 'sinus'
 
@@ -204,12 +218,12 @@ if __name__ == '__main__':
         data_param = [nb_examples, fs, freq_range, len_sample]
 
     batch_size = 16
-    nb_epochs = 10
+    nb_epochs = 2
 
     train = True
 
     save = False
-    savename = 'raw_audio_encoder_1D_sinus_200_1000Hz.pt'
+    savename = 'raw_audio_encoder_1D_sinus_200_1000Hz_21kernel.pt'
 
     load = False
     loadname = 'raw_audio_encoder_1D_sinus_200_1000Hz.pt'

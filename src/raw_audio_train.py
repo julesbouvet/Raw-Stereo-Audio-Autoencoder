@@ -154,7 +154,7 @@ def visualization_latent_space(model, test_loader, frequencies):
     N = frequencies.shape[0]
 
     # create array with output encoder
-    test_encoded = np.zeros((N, 2, 688))
+    test_encoded = np.zeros((N, 2, 1))
 
     with torch.no_grad():
         for i, test_features in enumerate(test_loader, 0):
@@ -169,12 +169,17 @@ def visualization_latent_space(model, test_loader, frequencies):
             # transform the output in np.array
             outputs_encoder = outputs_encoder.cpu()
             outputs_encoder = outputs_encoder.detach().numpy()
+            outputs_encoder = outputs_encoder[0]
+
+            # take the average of temporal values
+            outputs_encoder = np.mean(outputs_encoder, axis=1, keepdims=True)
 
             # save it
-            test_encoded[i] = outputs_encoder[0]
+            test_encoded[i] = np.sqrt(outputs_encoder)
 
-    test_freqs_t = np.matlib.repmat(frequencies, 688, 1)
-    plt.scatter(test_encoded[:, 0, :], test_encoded[:, 1, :], c=test_freqs_t)
+    # test_freqs_t = np.matlib.repmat(frequencies, 688, 1)
+    plt.scatter(test_encoded[:, 0, :], test_encoded[:, 1, :], c=frequencies)
+    plt.colorbar()
     plt.show()
 
     pass

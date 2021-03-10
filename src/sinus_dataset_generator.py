@@ -17,8 +17,10 @@ class SinusSamplesDataset(Dataset):
         self.fs = fs
         self.frequency_range = frequency_range
         self.len_sinus = len_sinus
-        self.samples = self.sinus_generator(self.nb_examples, self.fs, self.frequency_range, self.len_sinus)
-
+        self.samples, self.frequencies = self.sinus_generator(self.nb_examples,
+                                                              self.fs,
+                                                              self.frequency_range,
+                                                              self.len_sinus)
 
     def __len__(self):
         return self.samples.size()[0]
@@ -29,10 +31,12 @@ class SinusSamplesDataset(Dataset):
     def sinus_generator(self, nb_examples, fs, frequency_range, len_sinus):
         # create samples array
         samples = np.zeros((nb_examples, 2, len_sinus))
+        frequencies = np.zeros(nb_examples)
 
         for num_example in range(nb_examples):
             # define f, gain, phase, celerity of sound and distance btw two mics
             f = np.random.randint(frequency_range[0], frequency_range[1])  # frequency (Hz)
+            frequencies[num_example] = f
             gain = np.random.uniform(0.5, 1.0)  # gain
             phase = np.random.random() * np.pi  # phase
             d1 = 2  # distance btw the two microphones (2)
@@ -58,7 +62,7 @@ class SinusSamplesDataset(Dataset):
             # numpy to Tensor
             samples_tensor = torch.from_numpy(samples)
 
-        return samples_tensor
+        return samples_tensor, frequencies
 
 #####################################################
 #                                                   #

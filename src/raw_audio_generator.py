@@ -40,7 +40,7 @@ def generate_sinus(model):
             output = output.detach().numpy()
 
             ax[ii, jj].plot(output[0][:200], color="tab:red")
-            ax[ii, jj].set_title(f"Latent space {latent_space_values[3*ii+jj]}")
+            ax[ii, jj].set_title(f"Latent space mean {latent_space_values[3*ii+jj]}")
             ax[ii, jj].set_xticks([])
             ax[ii, jj].set_yticks([])
     plt.show()

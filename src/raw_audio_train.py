@@ -32,22 +32,12 @@ def audio_data_generation(audio_wav, duration_sample, batch_size):
 def sinus_data_generation(nb_examples, fs , freq_range, len_sample, batch_size):
 
     # dataset loading
-    train_dataset = SinusSamplesDataset(nb_examples=nb_examples, fs=fs, frequency_range=freq_range, len_sinus=len_sample)
-    samples = train_dataset.samples
-    print('Sinus train dataset done!')
+    dataset = SinusSamplesDataset(nb_examples=nb_examples, fs=fs, frequency_range=freq_range, len_sinus=len_sample)
+    frequency = dataset.frequencies
 
-    # train test split
-    split = int(nb_examples * 0.3)
-    # print('split', split)
-    test_dataset = SinusSamplesDataset(nb_examples=split, fs=fs, frequency_range=freq_range,
-                                        len_sinus=len_sample)
-    print('Sinus test dataset done!')
+    dataloader = DataLoader(dataset, batch_size)
 
-    # dataloader creation
-    train_dataloader = DataLoader(train_dataset, batch_size)
-    test_dataloader = DataLoader(test_dataset, batch_size)
-
-    return train_dataloader, test_dataloader, samples
+    return dataloader, frequency
 
 
 def training(dataloader, testloader, model, lr, epochs):
@@ -158,6 +148,10 @@ def test_prediction(data, model):
     pass
 
 
+def visualization_latent_space(model):
+    pass
+
+
 def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, savename, load, loadname):
 
     if data_type == 'audio':
@@ -166,11 +160,20 @@ def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, sa
                                                                    batch_size=batch_size)
 
     if data_type == 'sinus':
-        train_loader, test_loader, samples = sinus_data_generation(nb_examples=data_parameter[0],
+        train_loader, train_frequencies = sinus_data_generation(nb_examples=data_parameter[0],
                                                                    fs=data_parameter[1],
                                                                    freq_range=data_parameter[2],
                                                                    len_sample=data_parameter[3],
                                                                    batch_size=batch_size)
+        print("Train loader ready!")
+
+        test_loader, test_frequencies = sinus_data_generation(nb_examples=data_parameter[4],
+                                                                   fs=data_parameter[1],
+                                                                   freq_range=data_parameter[2],
+                                                                   len_sample=data_parameter[3],
+                                                                   batch_size=batch_size)
+
+        print("Test loader ready!")
 
     if train == True:
         trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=nb_epochs)
@@ -215,7 +218,8 @@ if __name__ == '__main__':
         fs = 11000
         freq_range = [200, 1000]
         len_sample = 11000
-        data_param = [nb_examples, fs, freq_range, len_sample]
+        nb_test = 0.3*1000
+        data_param = [nb_examples, fs, freq_range, len_sample, nb_test]
 
     batch_size = 16
     nb_epochs = 2

@@ -175,7 +175,7 @@ def visualization_latent_space(model, test_loader, frequencies):
             outputs_encoder = np.mean(outputs_encoder, axis=1, keepdims=True)
 
             # save it
-            test_encoded[i] = np.sqrt(outputs_encoder)
+            test_encoded[i] = outputs_encoder
 
     # test_freqs_t = np.matlib.repmat(frequencies, 688, 1)
     plt.scatter(test_encoded[:, 0, :], test_encoded[:, 1, :], c=frequencies)
@@ -268,7 +268,7 @@ if __name__ == '__main__':
     load = True
     loadname = 'raw_audio_encoder_1D_sinus_200_1000Hz_kernel13_epoch25.pt'
 
-    latent_space = True
+    latent_space = False
 
     run(model, data_type=data_type, data_parameter=data_param, batch_size=batch_size, nb_epochs=nb_epochs,
         train=train, save=save, savename=savename, load=load, loadname=loadname, latent_space=latent_space)

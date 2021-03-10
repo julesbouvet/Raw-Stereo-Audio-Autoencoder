@@ -1,10 +1,9 @@
 import numpy as np
+import numpy.matlib
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 import torch.optim as optim
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 from raw_audio_autoencoder import AutoEncoder_1D
 from raw_audio_dataset import DataSetAudio_1D
 from sinus_dataset_generator import SinusSamplesDataset
@@ -34,10 +33,11 @@ def sinus_data_generation(nb_examples, fs , freq_range, len_sample, batch_size):
     # dataset loading
     dataset = SinusSamplesDataset(nb_examples=nb_examples, fs=fs, frequency_range=freq_range, len_sinus=len_sample)
     frequency = dataset.frequencies
+    samples = dataset.samples
 
     dataloader = DataLoader(dataset, batch_size)
 
-    return dataloader, frequency
+    return dataloader, frequency, samples
 
 
 def training(dataloader, testloader, model, lr, epochs):
@@ -148,11 +148,39 @@ def test_prediction(data, model):
     pass
 
 
-def visualization_latent_space(model):
+def visualization_latent_space(model, test_loader, frequencies):
+
+    # get the number of examples
+    N = frequencies.shape[0]
+
+    # create array with output encoder
+    test_encoded = np.zeros((N, 2, 688))
+
+    with torch.no_grad():
+        for i, test_features in enumerate(test_loader, 0):
+
+            # set the input to go to encoder
+            test_features = test_features.float()
+            test_features = test_features.to(device)
+
+            # pass the input in the encoder
+            outputs_encoder = model.encoder(test_features)
+
+            # transform the output in np.array
+            outputs_encoder = outputs_encoder.cpu()
+            outputs_encoder = outputs_encoder.detach().numpy()
+
+            # save it
+            test_encoded[i] = outputs_encoder[0]
+
+    test_freqs_t = np.matlib.repmat(frequencies, 688, 1)
+    plt.scatter(test_encoded[:, 0, :], test_encoded[:, 1, :], c=test_freqs_t)
+    plt.show()
+
     pass
 
 
-def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, savename, load, loadname):
+def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, savename, load, loadname, latent_space):
 
     if data_type == 'audio':
         train_loader, test_loader, samples = audio_data_generation(audio_wav=data_parameter[0],
@@ -160,33 +188,36 @@ def run(model, data_type, data_parameter, batch_size, nb_epochs, train, save, sa
                                                                    batch_size=batch_size)
 
     if data_type == 'sinus':
-        train_loader, train_frequencies = sinus_data_generation(nb_examples=data_parameter[0],
+        train_loader, train_frequencies, train_samples = sinus_data_generation(nb_examples=data_parameter[0],
                                                                    fs=data_parameter[1],
                                                                    freq_range=data_parameter[2],
                                                                    len_sample=data_parameter[3],
                                                                    batch_size=batch_size)
         print("Train loader ready!")
 
-        test_loader, test_frequencies = sinus_data_generation(nb_examples=data_parameter[4],
+        test_loader, test_frequencies, test_samples = sinus_data_generation(nb_examples=data_parameter[4],
                                                                    fs=data_parameter[1],
                                                                    freq_range=data_parameter[2],
                                                                    len_sample=data_parameter[3],
-                                                                   batch_size=batch_size)
+                                                                   batch_size=1)
 
         print("Test loader ready!")
 
     if train == True:
         trained_model = training(train_loader, test_loader, model, lr=0.001, epochs=nb_epochs)
 
-    if save==True:
-        torch.save(trained_model, savename)
+    if save == True:
+        torch.save(trained_model, '../models/'+savename)
         print('Model saved!')
 
-    if load==True:
+    if load == True:
         model = torch.load('../models/'+loadname)
         model.eval()
 
-    test_prediction(samples, model)
+        if latent_space == True:
+            visualization_latent_space(model, test_loader=test_loader, frequencies=test_frequencies)
+
+    test_prediction(test_samples, model)
     pass
 
 
@@ -218,19 +249,21 @@ if __name__ == '__main__':
         fs = 11000
         freq_range = [200, 1000]
         len_sample = 11000
-        nb_test = 0.3*1000
+        nb_test = int(0.3*1000)
         data_param = [nb_examples, fs, freq_range, len_sample, nb_test]
 
     batch_size = 16
     nb_epochs = 2
 
-    train = True
+    train = False
 
     save = False
     savename = 'raw_audio_encoder_1D_sinus_200_1000Hz_21kernel.pt'
 
-    load = False
-    loadname = 'raw_audio_encoder_1D_sinus_200_1000Hz.pt'
+    load = True
+    loadname = 'raw_audio_encoder_1D_sinus_200_1000Hz_kernel13_epoch25.pt'
+
+    latent_space = True
 
     run(model, data_type=data_type, data_parameter=data_param, batch_size=batch_size, nb_epochs=nb_epochs,
-        train=train, save=save, savename=savename, load=load, loadname=loadname)
+        train=train, save=save, savename=savename, load=load, loadname=loadname, latent_space=latent_space)

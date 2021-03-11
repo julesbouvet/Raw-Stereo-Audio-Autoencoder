@@ -1,6 +1,8 @@
 import torch
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wavfile
+import numpy as np
+import scipy.fft as fft
 from raw_audio_autoencoder import AutoEncoder_1D
 
 
@@ -26,25 +28,39 @@ def generate_sinus(model):
 
     latent_space_values = [10, 20, 30, 40, 50, 60]
 
-    fig, ax = plt.subplots(2, 3)
-    for ii in range(2):
-        for jj in range(3):
-            # generate random input
-            input = torch.normal(mean=latent_space_values[3*ii+jj], std=1, size=(1, 2, 688))  # shape (1, 2, 688)
+    fig, ax = plt.subplots(6, 1)
+    fig_spec, ax_spec = plt.subplots(6, 1)
+    for ii in range(6):
+        # generate random input
+        input = torch.normal(mean=latent_space_values[ii], std=1, size=(1, 2, 688))  # shape (1, 2, 688)
 
-            # input goes through the decoder
-            output = model.decoder(input)  # shape (1, 2, 11000)
+        # input goes through the decoder
+        output = model.decoder(input)  # shape (1, 2, 11000)
 
-            # remove the 1st dimension -> (2, 11000)
-            output = torch.squeeze(output)
-            output = output.detach().numpy()
+        # remove the 1st dimension -> (2, 11000)
+        output = torch.squeeze(output)
+        output = output.detach().numpy()
 
-            ax[ii, jj].plot(output[0][:200], color="tab:red")
-            ax[ii, jj].set_title(f"Latent space mean {latent_space_values[3*ii+jj]}")
-            ax[ii, jj].set_xticks([])
-            ax[ii, jj].set_yticks([])
+        # plot generated sinus
+        ax[ii].plot(output[0][:200], color="tab:red")
+        ax[ii].set_title(f"Latent space mean {latent_space_values[ii]}")
+        ax[ii].set_xticks([])
+        ax[ii].set_yticks([])
+
+        # plot spectrum
+        yf = make_spectrum(output[0])
+        ax_spec[ii].plot(yf, color="tab:red")
+        ax_spec[ii].set_title(f"Spectrum {latent_space_values[ii]}")
+        ax_spec[ii].set_yticks([])
     plt.show()
     return output
+
+
+def make_spectrum(y):
+    nb_points = y.shape[0]
+    yf = fft.fft(y)
+    yf = 2.0/nb_points * np.abs(yf[0:nb_points//2])
+    return yf
 
 
 def from_array_to_wav(sound_array, fs, name):
@@ -60,5 +76,3 @@ if __name__ == '__main__':
     model = torch.load('../models/'+model_name)
     model.eval()
     output = generate_sinus(model)
-
-

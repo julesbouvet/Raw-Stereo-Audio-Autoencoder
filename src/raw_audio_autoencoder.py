@@ -77,7 +77,7 @@ class AutoEncoder_1D(nn.Module):
 ################################
 #                              #
 #           MODEL 1D           #
-#     Various Kernel Size      #
+#     Variable Kernel Size      #
 #                              #
 ################################
 

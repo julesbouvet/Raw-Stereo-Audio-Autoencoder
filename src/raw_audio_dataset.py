@@ -5,9 +5,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-
-
-class DataSetAudio_2D (Dataset) :
+class DataSetAudio_2D(Dataset):
 
     def __init__(self, audio_wavfile, duration_sample):
         self.audio = audio_wavfile
@@ -59,7 +57,7 @@ class DataSetAudio_2D (Dataset) :
         return samples_tensor, len_sample, nb_samples
 
 
-class DataSetAudio_1D (Dataset) :
+class DataSetAudio_1D (Dataset):
 
     def __init__(self, audio_wavfile, duration_sample):
         self.audio = audio_wavfile
